@@ -5,11 +5,8 @@ from typing import List, Dict, Any
 import sys
 import json
 from datetime import datetime
-from job_medley_scraper_daily_scheduled import job_types_connection
+# from job_medley_scraper_daily_scheduled import job_types_connection
 
-def create_date_string():
-    # 获取当前日期，并格式化为 'YYYY-MM-DD'
-    return datetime.now().strftime("%Y-%m-%d")
 
 class JobMedleyScraper:
     def __init__(self, page):
@@ -18,31 +15,162 @@ class JobMedleyScraper:
 
     # 1. CSVの列名を定義
     CSV_COLUMNS = [
-        '求人サブタイトル', '応募受付電話番号','電話応募', '職種','業務内容', '応募資格', '求める人物像',
-        '雇用形態', '勤務体系', '年齢', '就業時間', '休憩時間', '賃金', '賃金区分', '最低給与金額', 
-        '最大給与金額', '基本給','勤務時間', '固定残業の有無', '固定残業時間', '固定残業代', '試用期間', 
-        '試用期間の有無', '試用期間中の条件', '試用期間中の賃金区分', '試用期間中の最低給与金額',
-        '試用期間中の最大給与金額', '試用期間中の勤務時間','試用期間中の固定残業の有無', '試用期間中の固定残業時間', 
-        '給与の補足', '待遇', '休日', '年間休日数','郵便番号','都道府県', '市区町村', '町丁目番地', 
-        'ビル・建物名', '沿線・最寄駅', '従業員数', '加入保険等', '加入保険等(Indeed api用)','採用人数', 
-        'Indeed api用 採用人数', '学歴', '選考方法', '勤務先会社名', '勤務先会社本社所在地', '勤務先事業内容', 
-        '受動喫煙防止措置','求人PR', '学歴不問', '履歴書不要', '賞与あり', '資格取得支援制度', '正社員'
-    ]
-
-    # 2. 常に定数である列の変数を宣言
-    CONSTANT_VALUES = {
-        '電話応募': '可',
-        '固定残業の有無':'なし',
-        '加入保険等': '健康保険,厚生年金,雇用保険,労災保険', 
-        '加入保険等(Indeed api用)': '健康保険,厚生年金,雇用保険,労災保険',
-        '採用人数': '1', 
-    }
+    "管理id",
+    "取得元テーブル名",
+    "取得元求人url",
+    "登録日時",
+    "アクション",
+    "公開_非公開",
+    "公開予定日",
+    "非公開予定日",
+    "削除予定日",
+    "求人イメージ",
+    "求人タイトル",
+    "求人サブタイトル",
+    "応募受付電話番号",
+    "電話応募",
+    "職種",
+    "職種_google_for_jobs用",
+    "職種_求人box用",
+    "職種_stanby用",
+    "職種_検索用",
+    "職種_indeed検索用",
+    "業務内容",
+    "業務内容_画像1_url",
+    "業務内容_画像1_説明文",
+    "業務内容_画像2_url",
+    "業務内容_画像2_説明文",
+    "業務内容_画像3_url",
+    "業務内容_画像3_説明文",
+    "応募資格",
+    "応募資格_画像1_url",
+    "応募資格_画像1_説明文",
+    "応募資格_画像2_url",
+    "応募資格_画像2_説明文",
+    "応募資格_画像3_url",
+    "応募資格_画像3_説明文",
+    "求める人物像",
+    "求める人物像_画像1_url",
+    "求める人物像_画像1_説明文",
+    "求める人物像_画像2_url",
+    "求める人物像_画像2_説明文",
+    "求める人物像_画像3_url",
+    "求める人物像_画像3_説明文",
+    "雇用形態",
+    "勤務体系",
+    "採用フロー",
+    "採用担当",
+    "応募フォーム",
+    "年齢",
+    "就業時間",
+    "休憩時間",
+    "時間外",
+    "賃金",
+    "賃金区分",
+    "最低給与金額",
+    "最大給与金額",
+    "基本給",
+    "勤務時間",
+    "固定残業の有無",
+    "固定残業時間",
+    "固定残業時間_法定内",
+    "固定残業代",
+    "試用期間",
+    "試用期間の有無",
+    "試用期間中の条件",
+    "試用期間中の賃金区分",
+    "試用期間中の最低給与金額",
+    "試用期間中の最大給与金額",
+    "試用期間中の基本給",
+    "試用期間中の勤務時間",
+    "試用期間中の固定残業の有無",
+    "試用期間中の固定残業時間",
+    "試用期間中の固定残業時間_法定内",
+    "試用期間中の固定残業代",
+    "給与の補足",
+    "待遇",
+    "休日",
+    "年間休日数",
+    "育児休業取得実績",
+    "郵便番号",
+    "都道府県",
+    "市区町村",
+    "町丁目番地",
+    "ビル_建物名",
+    "リモートワーク制度",
+    "沿線_最寄駅",
+    "転勤",
+    "従業員数",
+    "加入保険等",
+    "加入保険等_indeed_api用",
+    "定年齢",
+    "再雇用",
+    "通勤手当",
+    "採用人数",
+    "採用人数_indeed_api用",
+    "学歴",
+    "選考方法",
+    "選考結果通知",
+    "応募書類等",
+    "選考日時",
+    "勤務先会社名",
+    "勤務先会社本社所在地",
+    "勤務先会社ウェブサイトurl",
+    "勤務先事業内容",
+    "受動喫煙防止措置",
+    "求人pr",
+    "カテゴリ_indeed用",
+    "カテゴリ_stanby用",
+    "カテゴリ_求人ボックス用",
+    "indeed検索用",
+    "応募通知メール受信設定",
+    "メールテンプレート名",
+    "問い合わせ先メールアドレス",
+    "メモ",
+    "タグ",
+    "非公開の選考条件",
+    "急募",
+    "オープニング",
+    "未経験歓迎",
+    "学歴不問",
+    "駅から5分以内",
+    "髪型_髪色自由",
+    "土日祝休み",
+    "残業なし",
+    "社員登用あり",
+    "交通費支給",
+    "リモート_在宅ok",
+    "車通勤ok",
+    "バイク通勤ok",
+    "寮_社宅あり",
+    "即日勤務ok",
+    "シニア応援",
+    "無資格ok",
+    "扶養内勤務ok",
+    "主婦_主夫歓迎",
+    "副業_wワークok",
+    "留学生歓迎",
+    "ブランクok",
+    "服装自由",
+    "履歴書不要",
+    "資格優遇",
+    "昇給_昇格あり",
+    "賞与あり",
+    "資格取得支援制度",
+    "正社員",
+    "週休2日",
+    "シフト自由_選べる",
+    "週1日からok",
+    "週2_3日からok",
+    "高収入_高時給",
+    "web面談可",
+    "管理タグ"
+]
 
     def scrape_jobs(self, job_type_code: str, prefecture_code:str, start_page:int, end_page:int, total_jobs: int, is_all: bool) -> None:
         for i in range(start_page, end_page + 1):
             print("is_all: " + str(is_all))
-            if i==1:  url = f"https://job-medley.com/{job_type_code}/pref{prefecture_code}/"
-            else: url = f"https://job-medley.com/{job_type_code}/pref{prefecture_code}/?page={i}"
+            url = f"https://job-medley.com/{job_type_code}/pref{prefecture_code}/?page={i}"
 
             self.page.goto(url)
 
@@ -59,86 +187,205 @@ class JobMedleyScraper:
                         found = True
                 except SystemExit:
                     print(f"ハローワーク求人を検出したため、スクレイピングを終了します: {job}")
-                    self.write_to_csv(job_type, total_jobs, is_all)  # 終了前に保存
+                    # self.write_to_csv(job_types_connection[job_type_code], total_jobs, is_all)  # 終了前に保存
                     return
-        # # ヒットデータ：10件ごとにCSVに書き込む
-        if len(self.data_list) >= 10:
-            self.write_to_csv(job_type, total_jobs, is_all)
-        # # ヒットデータ：残りのデータがあれば書き込む
-        if self.data_list:
-            self.write_to_csv(job_type, total_jobs, is_all)
+                print(len(self.data_list))
+                # # ヒットデータ：10件ごとにCSVに書き込む
+                if len(self.data_list) >= 10:
+                    self.write_to_csv(self.data_list, is_all)
+                    print(self.data_list)
+            # # ヒットデータ：残りのデータがあれば書き込む
+            if self.data_list:
+                self.write_to_csv(self.data_list, is_all)
 
         
     def scrape_job_details(self, job_url: str) -> Dict[str, str]:
         self.page.goto(job_url)
         # ハローワーク求人のより正確なチェック
-        #?????????????????
+
         hello_work_elements = self.page.query_selector_all('span.c-tag:has-text("ハローワーク求人"), p.c-heading:has-text("この求人はハローワーク求人です")')
         if hello_work_elements:
             for element in hello_work_elements:
                 print(f"検出された要素: {element.inner_text()}")
             raise SystemExit(0)  # SystemExitを発生させる
-        # 3. サイトからデータを各変数として取得
+        
+        # サイトからデータを各変数として取得
         data = {
-            '求人サブタイトル': self.get_text('h2.font-semibold'),#これはだめ、、
-            '応募受付電話番号': '',
-            '職種': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("募集職種") + div div'),
-            '業務内容': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("仕事内容") + div p'),
-            '応募資格': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("応募要件") + div p'), 
-            '求める人物像': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("仕事内容") + div p'),
-            '雇用形態': self.get_job_forms(), 
-            '勤務体系': self.get_work_style(), 
-            '年齢': self.get_age_info(), 
-            '就業時間': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("勤務時間") + div p'), 
-            '休憩時間': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("勤務時間") + div p'), 
-            '賃金': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("給与") + div p'), 
-            '賃金区分': self.get_wage_classification(), 
-            '最低給与金額': self.get_salary_range()[0], 
-            '最大給与金額': self.get_salary_range()[1], 
-            '基本給': self.get_basic_salary(),
-            '勤務時間': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("勤務時間") + div p'), 
-            '固定残業時間': '', 
-            '固定残業代': '', 
-            '試用期間': self.get_trial_period()[1], 
-            '試用期間の有無': self.get_trial_period()[0], 
-            '試用期間中の条件': '', 
-            '試用期間中の賃金区分': '', 
-            '試用期間中の最低給与金額': '',
-            '試用期間中の最大給与金額': '', 
-            '試用期間中の勤務時間': '',
-            '試用期間中の固定残業の有無': '', 
-            '試用期間中の固定残業時間': '', 
-            '給与の補足': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("給与の備考") + div p'), 
-            '待遇': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("待遇") + div p'), 
-            '休日': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("休日") + div p'), 
-            '年間休日数': self.get_annual_hoildays(),
-            '郵便番号': '',
-            '都道府県': self.split_address()[0], 
-            '市区町村': self.split_address()[1], 
-            '町丁目番地': self.split_address()[2], 
-            'ビル・建物名': '', 
-            '沿線・最寄駅': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("アクセス") + div div p:nth-of-type(2)'), 
-            '従業員数': self.get_staff_total(), 
-            'Indeed api用 採用人数': '', 
-            '学歴': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("応募要件") + div div div a:has-text("学歴")'), 
-            '選考方法': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("選考プロセス") + div div p'),  #だめっぽい、、、
-            '勤務先会社名': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("法人・施設名") + div a'), 
-            '勤務先会社本社所在地': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("アクセス") + div div p:nth-of-type(1)'), 
-            '勤務先事業内容': '', 
-            '受動喫煙防止措置': '',
-            # '求人PR': , 
-            '学歴不問': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("応募要件") + div div div a:has-text("学歴")'),
-            '履歴書不要': '', 
-            '賞与あり': self.check_bonus(), 
-            '資格取得支援制度': self.check_eligibility_support(), 
-            '正社員': self.get_job_forms()
-        }
-
-        # 4. 定数値を追加
-        data.update(self.CONSTANT_VALUES)
+    "管理id": "",
+    "取得元テーブル名": "",
+    "取得元求人url": "",
+    "登録日時": "",
+    "アクション": "",
+    "公開_非公開": "",
+    "公開予定日": "",
+    "非公開予定日": "",
+    "削除予定日": "",
+    "求人イメージ": "",
+    "求人タイトル": "",
+    '求人サブタイトル': self.get_text('h2.font-semibold.text-jm-brown'),
+    "応募受付電話番号": "",
+    "電話応募":'可',
+    '職種': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("募集職種") + div div'),
+    "職種_google_for_jobs用": "",
+    "職種_求人box用": "",
+    "職種_stanby用": "",
+    "職種_検索用": "",
+    "職種_indeed検索用": "",
+    '業務内容': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("仕事内容") + div p'),
+    "業務内容_画像1_url": "",
+    "業務内容_画像1_説明文": "",
+    "業務内容_画像2_url": "",
+    "業務内容_画像2_説明文": "",
+    "業務内容_画像3_url": "",
+    "業務内容_画像3_説明文": "",
+    '応募資格': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("応募要件") + div p'),
+    "応募資格_画像1_url": "",
+    "応募資格_画像1_説明文": "",
+    "応募資格_画像2_url": "",
+    "応募資格_画像2_説明文": "",
+    "応募資格_画像3_url": "",
+    "応募資格_画像3_説明文": "",
+    '求める人物像': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("仕事内容") + div p'),
+    "求める人物像_画像1_url": "",
+    "求める人物像_画像1_説明文": "",
+    "求める人物像_画像2_url": "",
+    "求める人物像_画像2_説明文": "",
+    "求める人物像_画像3_url": "",
+    "求める人物像_画像3_説明文": "",
+    '雇用形態': self.get_job_forms(), 
+    '勤務体系': self.get_work_style(), 
+    "採用フロー": "",
+    "採用担当": "",
+    "応募フォーム": "",
+    '年齢': self.get_age_info(), 
+    '就業時間': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("勤務時間") + div p'), 
+    '休憩時間': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("勤務時間") + div p'), 
+    "時間外": "",
+    '賃金': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("給与") + div p'), 
+    '賃金区分': self.get_wage_classification(), 
+    '最低給与金額': self.get_salary_range()[0], 
+    '最大給与金額': self.get_salary_range()[1], 
+    '基本給': self.get_basic_salary(),
+    '勤務時間': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("勤務時間") + div p'), 
+    '固定残業の有無': 'なし',
+    "固定残業時間": "",
+    "固定残業時間_法定内": "",
+    "固定残業代": "",
+    '試用期間': self.get_trial_period()[1], 
+    '試用期間の有無': self.get_trial_period()[0],
+    "試用期間中の条件": "",
+    "試用期間中の賃金区分": "",
+    "試用期間中の最低給与金額": "",
+    "試用期間中の最大給与金額": "",
+    "試用期間中の基本給": "",
+    "試用期間中の勤務時間": "",
+    "試用期間中の固定残業の有無": "",
+    "試用期間中の固定残業時間": "",
+    "試用期間中の固定残業時間_法定内": "",
+    "試用期間中の固定残業代": "",
+    '給与の補足': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("給与の備考") + div p'),
+    '待遇': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("待遇") + div p'), 
+    '休日': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("休日") + div p'), 
+    '年間休日数': self.get_annual_holidays(),
+    "育児休業取得実績": "",
+    '都道府県': self.split_address()[0], 
+    '市区町村': self.split_address()[1], 
+    '町丁目番地': self.split_address()[2], 
+    "ビル_建物名": "",
+    "リモートワーク制度": "",
+    '沿線・最寄駅': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("アクセス") + div div p:nth-of-type(2)'), 
+    "転勤": "",
+    '従業員数': self.get_staff_total(), 
+    '加入保険等': '健康保険,厚生年金,雇用保険,労災保険', 
+    '加入保険等(Indeed api用)': '健康保険,厚生年金,雇用保険,労災保険',
+    "定年齢": "",
+    "再雇用": "",
+    "通勤手当": "",
+    '採用人数': '1',
+    "採用人数_indeed_api用": "",
+    "学歴": self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("応募要件") + div div div a:has-text("学歴")'), 
+    "選考方法": self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("選考プロセス") + div div p'),
+    "選考結果通知": "",
+    "応募書類等": "",
+    "選考日時": "",
+    "勤務先会社名": self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("法人・施設名") + div a'), 
+    "勤務先会社本社所在地": self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("アクセス") + div div p:nth-of-type(1)'), 
+    "勤務先会社ウェブサイトurl": "",
+    "勤務先事業内容": "",
+    "受動喫煙防止措置": "",
+    "求人pr": self.get_appeal_points(),
+    "カテゴリ_indeed用": "",
+    "カテゴリ_stanby用": "",
+    "カテゴリ_求人ボックス用": "",
+    "indeed検索用": "",
+    "応募通知メール受信設定": "",
+    "メールテンプレート名": "",
+    "問い合わせ先メールアドレス": "",
+    "メモ": "",
+    "タグ": "",
+    "非公開の選考条件": "",
+    "急募": "",
+    "オープニング": "",
+    "未経験歓迎": "",
+    '学歴不問': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("応募要件") + div div div a:has-text("学歴")'),
+    "駅から5分以内": "",
+    "髪型_髪色自由": "",
+    "土日祝休み": "",
+    "残業なし": "",
+    "社員登用あり": "",
+    "交通費支給": "",
+    "リモート_在宅ok": "",
+    "車通勤ok": "",
+    "バイク通勤ok": "",
+    "寮_社宅あり": "",
+    "即日勤務ok": "",
+    "シニア応援": "",
+    "無資格ok": "",
+    "扶養内勤務ok": "",
+    "主婦_主夫歓迎": "",
+    "副業_wワークok": "",
+    "留学生歓迎": "",
+    "ブランクok": "",
+    "服装自由": "",
+    "履歴書不要": "",
+    "資格優遇": "",
+    "昇給_昇格あり": "",
+    '賞与あり': self.check_bonus(), 
+    '資格取得支援制度': self.check_eligibility_support(), 
+    '正社員': self.get_job_forms(),
+    "週休2日": "",
+    "シフト自由_選べる": "",
+    "週1日からok": "",
+    "週2_3日からok": "",
+    "高収入_高時給": "",
+    "web面談可": "",
+    "管理タグ": ""
+}
 
         return data
 
+    def write_to_csv(self, data_list: Dict[str, Any], is_all: bool) -> None:
+        output_dir = 'output'
+        os.makedirs(output_dir, exist_ok=True)
+        
+        filename = f'{output_dir}/job_medley全職種求人.csv'
+        
+        if is_all:
+            file_exists = os.path.isfile(filename)
+            try:
+                with open(filename, 'a', newline='', encoding='utf-8') as csvfile:
+                    writer = csv.DictWriter(csvfile, fieldnames=self.CSV_COLUMNS)
+                    if not file_exists:
+                        writer.writeheader()
+                    for row in self.data_list:
+                        csv_row = {col: row.get(col, '') for col in self.CSV_COLUMNS}
+                        writer.writerow(csv_row)
+                print(f"データをCSVファイルに追加しました: {filename}")
+            except IOError as e:
+                print(f"CSVファイルへの書き込み中にエラーが発生しました {filename}: {e}")
+
+        # データリストをクリア
+        self.data_list = []
 
     def get_text(self, selector: str) -> str:
         """
@@ -150,8 +397,7 @@ class JobMedleyScraper:
         element = self.page.query_selector(selector)
         return element.inner_text() if element else ''
 
-
-    # def get_appeal_points(self) -> str:
+    def get_appeal_points(self) -> str:
         """
         求人のアピールポイントを取得します。
 
@@ -495,45 +741,4 @@ class JobMedleyScraper:
         match = re.search(r'〜\s*(\d{1,3},\d{3})', input_str)
         return match.group(1) if match else ''
 
-    def write_to_csv(self, job_type: str, total_jobs: int, is_all: bool) -> None:
-        output_dir = 'output'
-        os.makedirs(output_dir, exist_ok=True)
-        
-        # filename = f'{output_dir}/{job_types_connection[job_type]}.csv'
-        filename = f'{output_dir}/job_medley全職種求人.csv'
-        
-        while is_all:
-            file_exists = os.path.isfile(filename)
-            try:
-                with open(filename, 'a', newline='', encoding='utf-8') as csvfile:
-                    writer = csv.DictWriter(csvfile, fieldnames=self.CSV_COLUMNS)
-                    if not file_exists:
-                        writer.writeheader()
-                    for row in self.data_list:
-                        csv_row = {col: row.get(col, '') for col in self.CSV_COLUMNS}
-                        writer.writerow(csv_row)
-                print(f"データをCSVファイルに追加しました: {filename}")
-            except IOError as e:
-                print(f"CSVファイルへの書き込み中にエラーが発生しました {filename}: {e}")
-            # データリストをクリア
-            self.data_list = []
-            break
-        
-        if not is_all:
-            file_exists = os.path.isfile(filename)
-            try:
-                with open(filename, 'a', newline='', encoding='utf-8') as csvfile:
-                    writer = csv.DictWriter(csvfile, fieldnames=self.CSV_COLUMNS)
-                    if not file_exists:
-                        writer.writeheader()
-                    for row in self.data_list:
-                        csv_row = {col: row.get(col, '') for col in self.CSV_COLUMNS}
-                        writer.writerow(csv_row)
-                print(f"データをCSVファイルに追加しました: {filename}")
-            except IOError as e:
-                print(f"CSVファイルへの書き込み中にエラーが発生しました {filename}: {e}")
-            # データリストをクリア
-            self.data_list = []
-        
-        # データリストをクリア
-        self.data_list = []
+    

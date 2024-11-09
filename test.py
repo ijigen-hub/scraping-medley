@@ -11,11 +11,12 @@ class JobMedleyScraper:
             browser = p.chromium.launch(headless=False)  # 使用 headless=False 来查看页面加载过程
             self.page = browser.new_page()
             self.page.goto(self.url)
-
-            # print(self.get_work_style())
             
-            print(self.get_appeal_points())
-            browser.close()
+            links = self.page.query_selector_all('a:has-text("求人を見る")')
+
+            jobs = [link.get_attribute('href') for link in links]
+            print(jobs)
+
 
     def get_appeal_points(self) -> str:
         """
@@ -146,6 +147,10 @@ class JobMedleyScraper:
         # 情報が存在する場合は「あり」、存在しない場合は空白を返す
         return 'あり' if bonus_text else ''
 # 使用示例
-url = f"https://job-medley.com/hh/1143681/" 
+url = f"https://job-medley.com/hh/pref13/" 
 scraper = JobMedleyScraper(url)
 scraper.start()
+
+
+
+            
