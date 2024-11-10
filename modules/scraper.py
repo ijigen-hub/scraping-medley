@@ -189,11 +189,9 @@ class JobMedleyScraper:
                     print(f"ハローワーク求人を検出したため、スクレイピングを終了します: {job}")
                     # self.write_to_csv(job_types_connection[job_type_code], total_jobs, is_all)  # 終了前に保存
                     return
-                print(len(self.data_list))
                 # # ヒットデータ：10件ごとにCSVに書き込む
                 if len(self.data_list) >= 10:
                     self.write_to_csv(self.data_list, is_all)
-                    print(self.data_list)
             # # ヒットデータ：残りのデータがあれば書き込む
             if self.data_list:
                 self.write_to_csv(self.data_list, is_all)
@@ -404,7 +402,7 @@ class JobMedleyScraper:
 
         :return: アピールポイントのリスト（カンマ区切り）
         """
-        tags = self.page.query_selector_all('a.c-tag')
+        tags = self.page.query_selector_all('div.flex.flex-wrap.gap-1 a')
         appeal_points = ','.join([tag.inner_text() for tag in tags])
         return f"✅アピールポイント\n{appeal_points}"
 
@@ -418,8 +416,10 @@ class JobMedleyScraper:
         kyuyo = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("給与") + div')
         forms = ['正職員', '契約職員', 'パート・バイト', '業務委託']
         for form in forms:
+            
             if form in kyuyo:
-                return form
+                if form == '正職員' : return '正社員'
+                else: return form
 
     def get_work_style(self) -> str:
         """
@@ -568,6 +568,7 @@ class JobMedleyScraper:
         # 5. 月数が見つかった場合はリストに追加、見つからない場合はなし
         if month_match:
             result.append(month_match.group(1))  # 月数（例: '3'）をリストに追加
+        else: result.append('')
         
         return result
 
@@ -624,32 +625,31 @@ class JobMedleyScraper:
             result[2] = address_text[city_match.end():].strip()
         
         return result
-
+    
     def get_staff_total(self) -> str:
-        """
-        「スタッフ構成」に関する情報を取得し、情報中に含まれるすべての数字を合計します。
+        # スタッフ構成の情報を取得
+        selector = '.font-semibold.text-jm-sm.break-keep:has-text("スタッフ構成") + div div'
+        text = self.get_text(selector)
 
-        :return: 合計されたスタッフ数の文字列、または空白文字列
-        """
-        # 1. 指定したセレクタからテキスト情報を取得
-        staff_text = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("スタッフ構成") + div div')
-        
-        # 2. 情報が存在しない場合は空白を返す
-        if not staff_text:
+        # 情報がなければ空文字を返す
+        if not text:
             return ''
-        
-        # 3. テキスト内のすべての数字を抽出
-        numbers = re.findall(r'\d+', staff_text)
-        
-        # 4. 数字のリストが空の場合は空白を返す
-        if not numbers:
-            return ''
-        
-        # 5. 数字を整数に変換して合計を計算
-        total = sum(int(num) for num in numbers)
-        
-        # 6. 合計を文字列として返す
-        return str(total)
+
+        # すべての数字を抽出
+        all_numbers = re.findall(r'\d+', text)
+        # 括弧内の数字を抽出（全角括弧を考慮して調整）
+        numbers_in_brackets = re.findall(r'（\D*(\d+)\D*）', text)
+
+        # すべての数字の合計
+        total_sum = sum(int(num) for num in all_numbers)
+        # 括弧内の数字の合計
+        brackets_sum = sum(int(num) for num in numbers_in_brackets)
+
+        # 合計から括弧内の数字を引いた結果
+        final_count = total_sum - brackets_sum
+
+        # 結果を文字列として返す
+        return str(final_count)
 
     def check_bonus(self) -> str:
         """

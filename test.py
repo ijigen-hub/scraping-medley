@@ -12,10 +12,7 @@ class JobMedleyScraper:
             self.page = browser.new_page()
             self.page.goto(self.url)
             
-            links = self.page.query_selector_all('a:has-text("求人を見る")')
-
-            jobs = [link.get_attribute('href') for link in links]
-            print(jobs)
+            print(self.get_appeal_points())
 
 
     def get_appeal_points(self) -> str:
@@ -25,74 +22,19 @@ class JobMedleyScraper:
 
         :return: アピールポイントのリスト（カンマ区切り）
         """
-        tags = self.page.query_selector_all('div.gap-1 a.text-jm-brown')
+        tags = self.page.query_selector_all('div.flex.flex-wrap.gap-1 a')
         appeal_points = ','.join([tag.inner_text() for tag in tags])
         return f"✅アピールポイント\n{appeal_points}"
-    
+
     def get_text(self, selector: str) -> str:
         """
-        从指定的选择器获取文本内容
+        指定されたセレクタの要素からテキストを取得します。
+
+        :param selector: CSSセレクタ
+        :return: 取得されたテキスト
         """
         element = self.page.query_selector(selector)
-        if element:
-            return element.inner_text()
-        else:
-            print("未找到元素:", selector)  # 添加调试信息
-            return ''
-
-    def get_age_info(self) -> str:
-        """
-        CSSセレクタ '.font-semibold.text-jm-sm.break-keep + div p' から情報を取得し、
-        その中にある年齢情報（「～XX歳」という形式）を抽出します。
-
-        :return: 年齢情報または空文字列
-        """
-        # 1. 応募要件を取得
-        requirements = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("応募要件") + div p')
-        
-        # 2. 年齢のパターンを正規表現で検索（例: "～XX歳" 形式）
-        age_pattern1 = r'～\d+歳'
-        age_match1 = re.search(age_pattern1, requirements)
-        age_pattern2 = r'\d+歳以下'
-        age_match2 = re.search(age_pattern2, requirements)
-        # 3. パターンが見つかった場合はその文字列を、見つからない場合は空文字列を返す
-        if age_match1: 
-            return age_match1.group(0)
-        elif age_match2: 
-            return age_match2.group(0)  
-        else: return''
-    def get_job_forms(self) -> str:
-        """
-        雇用形態を取得します。
-
-        
-
-        :return: 【正職員】or【契約職員】or【パート・バイト】or【業務委託】
-        """ 
-        kyuyo = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("給与") + div')
-        forms = ['正職員', '契約職員', 'パート・バイト', '業務委託']
-        for form in forms:
-            if form in kyuyo:
-                return form
-    
-    def get_work_style(self) -> str:
-        """
-        勤務体系を取得します。
-
-
-        :return: シフト制or固定時間制
-        """ 
-        work_hours = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("勤務時間") + div p')
-        holiday = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("休日") + div p')
-        attributes = [work_hours, holiday]
-
-        for attribute in attributes:
-            if 'シフト' in attribute:
-                return 'シフト制'
-            elif '固定時間' in attributes:
-                return '固定時間制'
-        return ''
-
+        return element.inner_text() if element else ''
     def get_wage_classification(self) -> str:
         """
         賃金区分
@@ -147,7 +89,7 @@ class JobMedleyScraper:
         # 情報が存在する場合は「あり」、存在しない場合は空白を返す
         return 'あり' if bonus_text else ''
 # 使用示例
-url = f"https://job-medley.com/hh/pref13/" 
+url = f"https://job-medley.com/hh/376152/" 
 scraper = JobMedleyScraper(url)
 scraper.start()
 
