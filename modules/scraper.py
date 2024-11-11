@@ -5,7 +5,7 @@ from typing import List, Dict, Any
 import sys
 import json
 from datetime import datetime
-# from job_medley_scraper_daily_scheduled import job_types_connection
+import unicodedata
 
 
 class JobMedleyScraper:
@@ -168,6 +168,7 @@ class JobMedleyScraper:
 ]
 
     def scrape_jobs(self, job_type_code: str, prefecture_code:str, start_page:int, end_page:int, total_jobs: int, is_all: bool) -> None:
+        count = 0 #スクレイピングした求人のカウント
         for i in range(start_page, end_page + 1):
             print("is_all: " + str(is_all))
             url = f"https://job-medley.com/{job_type_code}/pref{prefecture_code}/?page={i}"
@@ -178,11 +179,13 @@ class JobMedleyScraper:
 
             jobs = [link.get_attribute('href') for link in links]
             found = False
+            
             for job in jobs:
                 try:
                     data = self.scrape_job_details(job)
                     if data != "":
                         self.data_list.append(data)
+                        count += 1
                         print(f"Scraped page, job {job}")
                         found = True
                 except SystemExit:
@@ -192,6 +195,7 @@ class JobMedleyScraper:
                 # # ヒットデータ：10件ごとにCSVに書き込む
                 if len(self.data_list) >= 10:
                     self.write_to_csv(self.data_list, is_all)
+                    print(f"計{count}ページの情報が取れました。")
             # # ヒットデータ：残りのデータがあれば書き込む
             if self.data_list:
                 self.write_to_csv(self.data_list, is_all)
@@ -209,9 +213,9 @@ class JobMedleyScraper:
         
         # サイトからデータを各変数として取得
         data = {
-    "管理id": "",
-    "取得元テーブル名": "",
-    "取得元求人url": "",
+    "管理id": f"{job_url}",
+    "取得元テーブル名": f"{job_url}",
+    "取得元求人url": f"{job_url}",
     "登録日時": "",
     "アクション": "",
     "公開_非公開": "",
@@ -243,7 +247,7 @@ class JobMedleyScraper:
     "応募資格_画像2_説明文": "",
     "応募資格_画像3_url": "",
     "応募資格_画像3_説明文": "",
-    '求める人物像': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("仕事内容") + div p'),
+    '求める人物像': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("応募要件") + div p'),
     "求める人物像_画像1_url": "",
     "求める人物像_画像1_説明文": "",
     "求める人物像_画像2_url": "",
@@ -289,9 +293,9 @@ class JobMedleyScraper:
     '都道府県': self.split_address()[0], 
     '市区町村': self.split_address()[1], 
     '町丁目番地': self.split_address()[2], 
-    "ビル_建物名": "",
+    "ビル_建物名": self.split_address()[3],
     "リモートワーク制度": "",
-    '沿線・最寄駅': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("アクセス") + div div p:nth-of-type(2)'), 
+    '沿線・最寄駅': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("アクセス") + div div p.whitespace-pre-wrap'), 
     "転勤": "",
     '従業員数': self.get_staff_total(), 
     '加入保険等': '健康保険,厚生年金,雇用保険,労災保険', 
@@ -307,7 +311,7 @@ class JobMedleyScraper:
     "応募書類等": "",
     "選考日時": "",
     "勤務先会社名": self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("法人・施設名") + div a'), 
-    "勤務先会社本社所在地": self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("アクセス") + div div p:nth-of-type(1)'), 
+    "勤務先会社本社所在地": self.convert_f_h(self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("アクセス") + div div p:nth-of-type(1)')), 
     "勤務先会社ウェブサイトurl": "",
     "勤務先事業内容": "",
     "受動喫煙防止措置": "",
@@ -323,41 +327,42 @@ class JobMedleyScraper:
     "タグ": "",
     "非公開の選考条件": "",
     "急募": "",
-    "オープニング": "",
-    "未経験歓迎": "",
-    '学歴不問': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("応募要件") + div div div a:has-text("学歴")'),
-    "駅から5分以内": "",
-    "髪型_髪色自由": "",
-    "土日祝休み": "",
-    "残業なし": "",
-    "社員登用あり": "",
-    "交通費支給": "",
-    "リモート_在宅ok": "",
-    "車通勤ok": "",
-    "バイク通勤ok": "",
-    "寮_社宅あり": "",
-    "即日勤務ok": "",
-    "シニア応援": "",
-    "無資格ok": "",
-    "扶養内勤務ok": "",
-    "主婦_主夫歓迎": "",
-    "副業_wワークok": "",
-    "留学生歓迎": "",
-    "ブランクok": "",
-    "服装自由": "",
-    "履歴書不要": "",
-    "資格優遇": "",
-    "昇給_昇格あり": "",
-    '賞与あり': self.check_bonus(), 
-    '資格取得支援制度': self.check_eligibility_support(), 
-    '正社員': self.get_job_forms(),
-    "週休2日": "",
-    "シフト自由_選べる": "",
-    "週1日からok": "",
-    "週2_3日からok": "",
-    "高収入_高時給": "",
-    "web面談可": "",
-    "管理タグ": ""
+    #以下は、該当項目はアピールポイントにあるか否かで判断する。アピールポイントはタグの集まりのため。
+    "オープニング": "0",
+    "未経験歓迎": "1" if '未経験可' in self.get_appeal_points() else'0',
+    '学歴不問': "1" if '学歴不問' in self.get_appeal_points() else'0',
+    "駅から5分以内": "1" if '駅から(5分以内)' in self.get_appeal_points() else'0',
+    "髪型_髪色自由": "0",
+    "土日祝休み": "1" if '土日祝休み' in self.get_appeal_points() else'0',
+    "残業なし": "0",
+    "社員登用あり": "0",
+    "交通費支給": "1" if '交通費支給' in self.get_appeal_points() else'0',
+    "リモート_在宅ok": "0",
+    "車通勤ok": "1" if '車通勤可' in self.get_appeal_points() else '0',
+    "バイク通勤ok": "0",
+    "寮_社宅あり": "1" if '寮あり・社宅あり' in self.get_appeal_points() else '0',
+    "即日勤務ok": "1" if '即日勤務OK' in self.get_appeal_points() else '0',
+    "シニア応援": "0",
+    "無資格ok": "1" if '無資格可' in self.get_appeal_points() else '0',
+    "扶養内勤務ok": "0",
+    "主婦_主夫歓迎": "1" if '主夫・主婦OK' in self.get_appeal_points() else '0',
+    "副業_wワークok": "1" if '副業OK' in self.get_appeal_points() else '0',
+    "留学生歓迎": "1" if '外国人材・留学生活躍中' in self.get_appeal_points() else '0',
+    "ブランクok": "1" if 'ブランク可' in self.get_appeal_points() else '0',
+    "服装自由": "0",
+    "履歴書不要": "0",
+    "資格優遇": "0",
+    "昇給_昇格あり": "0",
+    '賞与あり': "1" if 'ボーナス・賞与あり' in self.get_appeal_points() else '0', 
+    '資格取得支援制度': "1" if '資格取得支援' in self.get_appeal_points() else '0',
+    '正社員': "1" if self.get_job_forms() == "正社員" else "0",
+    "週休2日": "1" if '週2日からOK' in self.get_appeal_points() else '0',
+    "シフト自由_選べる": "0",
+    "週1日からok": "1" if '週1日からOK' in self.get_appeal_points() else '0',
+    "週2_3日からok": "0",
+    "高収入_高時給": "0",
+    "web面談可": "1" if 'WEB面接可' in self.get_appeal_points() else '0',
+    "管理タグ": "0"
 }
 
         return data
@@ -394,6 +399,7 @@ class JobMedleyScraper:
         """
         element = self.page.query_selector(selector)
         return element.inner_text() if element else ''
+
 
     def get_appeal_points(self) -> str:
         """
@@ -487,8 +493,10 @@ class JobMedleyScraper:
         """
         賃金区分
         """
-        kyuyo = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("給与") + div')
-        if '月給' in kyuyo: return '月給'
+        salary_text = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("給与") + div')
+        wage_classification = ["月給", "時給", "年収"]
+        for classification in wage_classification:
+            if classification in salary_text: return classification
         else: return ''
 
     def get_salary_range(self) -> list:
@@ -498,23 +506,31 @@ class JobMedleyScraper:
 
         :return: [最低給与金額, 最高給与金額]
         """
-        # 1. 給与を取得
+        # 給与を取得
         salary_text = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("給与") + div div')
         
-        # 2. 給与の範囲（最低・最高）を抽出するための正規表現
-        min_salary_pattern = r'月給(\d+,\d+)円'
-        max_salary_pattern = r'月給\d+,\d+円〜(\d+,\d+)円'
-        
-        # 3. 最低給与金額を検索
-        min_salary_match = re.search(min_salary_pattern, salary_text)
-        min_salary = min_salary_match.group(1) if min_salary_match else ''
-        
-        # 4. 最高給与金額を検索
-        max_salary_match = re.search(max_salary_pattern, salary_text)
-        max_salary = max_salary_match.group(1) if max_salary_match else ''
-        
-        # 5. 最低給与金額と最高給与金額をリストにして返す、最低額はself.get_salary_range()[0]、最高額はself.get_salary_range[1]
-        return [min_salary, max_salary]
+        wage_classification = ["月給", "時給", "年収"]
+        for classification in wage_classification:
+            if classification in salary_text:
+                min_salary_pattern = r'{}(\d+,\d+)円'.format(classification)
+                max_salary_pattern = r'{}\d+,\d+円〜(\d+,\d+)円'.format(classification)
+
+                # 最低給与金額を検索
+                min_salary_match = re.search(min_salary_pattern, salary_text)
+                min_salary = min_salary_match.group(1) if min_salary_match else ''
+                #　’,’をなくす
+                if ',' in min_salary:
+                    min_salary = min_salary.replace(',', '')
+                    min_salary = min_salary.strip()
+                # 最高給与金額を検索
+                max_salary_match = re.search(max_salary_pattern, salary_text)
+                max_salary = max_salary_match.group(1) if max_salary_match else ''
+                #　’,’をなくす
+                if ',' in max_salary:
+                    max_salary = max_salary.replace(',', '')
+                    max_salary = max_salary.strip()
+
+                return [min_salary, max_salary]
 
     def get_basic_salary(self) -> str:
         """
@@ -551,25 +567,42 @@ class JobMedleyScraper:
 
         :return: [試用期間の有無 ('あり'または 'なし'), 試用期間の月数 (存在する場合の数値文字列)]
         """
-        # 1. 指定したセレクタから情報を取得
+        # 指定したセレクタから情報を取得
         info_text = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("給与の備考") + div p')
         
-        # 2. 「試用期間」が含まれているかを確認
+        # 「試用期間」が含まれているかを確認
         if '試用期間' not in info_text:
-            return ['なし', '']  # 試用期間がない場合
-        
-        # 3. 「試用期間」がある場合のリスト初期化
+            return ['', '']  # 試用期間がない場合
+        if '試用期間なし' in info_text:
+            return ['なし', '']
+
+        # 「試用期間」がある場合のリスト初期化
         result = ['あり']
-        
-        # 4. 試用期間の月数を抽出する正規表現パターン
-        month_pattern = r'試用期間.*?(\d+)(ヶ月|か月)'
+
+        #試用期間の月数を抽出する正規表現パターン1
+        sentence_match = re.search(r'[^。]*試用期間[^。]*[。．]?', info_text)
+        #試用期間の月数を抽出する正規表現パターン2
+        month_pattern = r'試用期間.*?(\d+)(ヶ月|か月|カ月|ヵ月)' 
         month_match = re.search(month_pattern, info_text)
-        
-        # 5. 月数が見つかった場合はリストに追加、見つからない場合はなし
-        if month_match:
-            result.append(month_match.group(1))  # 月数（例: '3'）をリストに追加
-        else: result.append('')
-        
+
+        if  month_match:
+            result.append(month_match.group(1)+ "ヶ月")  # 月数（例: '3ヶ月'）をリストに追加
+
+        elif sentence_match:
+            sentence = sentence_match.group(0)
+            duration_match = re.search(r'([0-9０-９]+)(か月|ヶ月|カ月|ヵ月)', sentence)
+
+            if duration_match:
+                duration = duration_match.group(1)
+                duration = self.convert_f_h(duration)#半角化する
+                result.append(duration + "ヶ月")  # 月数（例: '3ヶ月'）をリストに追加
+                return result
+            else:
+                result.append('')
+
+        else:
+            result.append('')
+
         return result
 
     def get_annual_holidays(self) -> str:
@@ -582,50 +615,75 @@ class JobMedleyScraper:
         holiday_text = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("休日") + div p')
         
         # 2. 「年間休日」の文字列があるか確認
-        if '年間休日' not in holiday_text:
+        if '年間休日' and '年休' not in holiday_text:
             return ''  # 「年間休日」がない場合は空白を返す
         
         # 3. 「年間休日」に続く1〜3桁の数字を抽出する正規表現パターン
-        holiday_pattern = r'年間休日\s*(\d{1,3})'
+        holiday_pattern = r'(年間休日|年休)\s*(\d{1,3})'
         holiday_match = re.search(holiday_pattern, holiday_text)
         
         # 4. 数字が見つかった場合はその数字を文字列として返す
-        return holiday_match.group(1) if holiday_match else ''
+        return holiday_match.group(2) if holiday_match else ''
 
     def split_address(self) -> list:
         """
-        住所情報を「都道府県」「市区町村」「その他」の3つの部分に分割してリストに格納します。
+        住所情報を「都道府県」「市区町村」「町丁目番号」「建物」の4つの部分に分割してリストに格納します。
 
-        :return: [都道府県, 市区町村, その他]
+        :return: [都道府県, 市区町村, 町丁目番号, 建物]
         """
-        # 1. 指定したセレクタからテキスト情報を取得
+        # 指定したセレクタからテキスト情報を取得
         address_text = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("アクセス") + div div p:nth-of-type(1)')
         
-        # 2. 都道府県を検出して抽出（都道府県は1～4文字の漢字であると仮定）
+        #リストを初期設定する
+        result = ["", "", "", ""]
+
+        # 都道府県を検出して抽出（都道府県は1～4文字の漢字であると仮定）
         prefecture_pattern = r'([一-龥]{1,4}県|[一-龥]{1,4}都|[一-龥]{1,4}府|[一-龥]{1,4}道)'
         prefecture_match = re.search(prefecture_pattern, address_text)
         
-        # 3. 市区町村を検出して抽出（市区町村は1～4文字の漢字であると仮定）
-        city_pattern = r'([一-龥]{1,4}(市|区|町|村))'
-        city_match = re.search(city_pattern, address_text)
-        
-        # 4. リストの初期化
-        result = ["", "", ""]
-
-        # 5. 都道府県と市区町村の情報をリストに追加
+        #  都道府県の情報をリストに追加
         if prefecture_match:
-            result[0] = prefecture_match.group(0)  # 都道府県部分を[0]に入れる
+            prefecture = prefecture_match.group(0)
+            result[0] =  prefecture # 都道府県部分を[0]に入れる
+
+        #　住所情報から都道府県の部分を削除する
+        address_text = address_text.replace(prefecture, '').strip()
+
+        # 3. 市区町村を検出して抽出（市区町村は1～4文字の漢字であると仮定）、市、区、町、村に優先度を付けて検出する
+        city_pattern1 = r'([一-龥]{1,4}(市|区))'
+        city_pattern2 = r'([一-龥]{1,4}(町))'
+        city_pattern3 = r'([一-龥]{1,4}(村))'
+        city_match1 = re.search(city_pattern1, address_text)
+        city_match2 = re.search(city_pattern2, address_text)
+        city_match3 = re.search(city_pattern3, address_text)
+        if city_match1: 
+            city = city_match1.group(0)
+            result[1] = city
+        elif city_match2:
+            city = city_match2.group(0)
+            result[1] = city
+        elif city_match3:
+            city = city_match3.group(0)
+            result[1] = city
         
-        if city_match:
-            # 市区町村部分を[1]に入れる
-            city_start = city_match.start()
-            result[1] = address_text[prefecture_match.end():city_start].strip() + city_match.group(0)
-            
-            # 残りの部分を[2]に入れる
-            result[2] = address_text[city_match.end():].strip()
+        #　更に、市区町村の部分を削除する
+        address_text = address_text.replace(city, '').strip()
         
+        #　先に、「スペースを検出する」ことで建物の情報を検出する、なければ空白を戻す
+        space_index = address_text.find(" ") 
+        if space_index != -1:
+            building = address_text[space_index + 1:]
+        else:
+            building = ''
+
+        #　町丁目番号の情報は、一番最初の住所情報から、都道府県＋市区町村＋建物の情報を抜けて残った情報になる。
+        town = address_text.replace(building, '').strip()
+        result[2] = self.convert_f_h(town)#半角化する
+
+        result[3] = self.convert_f_h(building)#半角化する
+
         return result
-    
+
     def get_staff_total(self) -> str:
         # スタッフ構成の情報を取得
         selector = '.font-semibold.text-jm-sm.break-keep:has-text("スタッフ構成") + div div'
@@ -642,6 +700,7 @@ class JobMedleyScraper:
 
         # すべての数字の合計
         total_sum = sum(int(num) for num in all_numbers)
+        if total_sum == 0: return ''#中に数字が入っていなければ、空白を戻す。（最後に0人というデータを戻すのを避けるため、）
         # 括弧内の数字の合計
         brackets_sum = sum(int(num) for num in numbers_in_brackets)
 
@@ -649,7 +708,7 @@ class JobMedleyScraper:
         final_count = total_sum - brackets_sum
 
         # 結果を文字列として返す
-        return str(final_count)
+        return final_count
 
     def check_bonus(self) -> str:
         """
@@ -696,6 +755,10 @@ class JobMedleyScraper:
             return '正社員' if text == '正職員' else text
         return ''
 
+    @staticmethod
+    def convert_f_h(text: str) -> str:
+        # 将全角字符转换为半角字符
+        return unicodedata.normalize('NFKC', text)
 
     @staticmethod
     def extract_payment_type(input_str: str) -> str:

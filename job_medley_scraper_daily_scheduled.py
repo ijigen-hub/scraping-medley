@@ -10,7 +10,7 @@ from modules.scraper import JobMedleyScraper
 
 
 def main():
-        #職種ーアプファベット対応関係
+    #職種ーアプファベット対応関係
     job_types_connection = {
     "hh": "介護職/ヘルパー",
     "la": "生活相談員",
@@ -163,6 +163,7 @@ def main():
                         print(f"予期せぬエラーが発生しました: {e}")
                 except Exception as e:
                     print(f"エラーが発生しました: {e}")
+    
 
             
 
