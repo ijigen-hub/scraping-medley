@@ -13,12 +13,15 @@ class JobMedleyScraper:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=False)  # 使用 headless=False 来查看页面加载过程
             self.page = browser.new_page()
+            self.page.route("**/*", lambda route: route.abort() if route.request.resource_type in ["image", "stylesheet", "font"] else route.continue_())
             self.page.goto(self.url)
 
-            print(self.split_address()[0])
-            print(self.split_address()[1])
-            print(self.split_address()[2])
-            print(self.split_address()[3])
+            print(self.get_basic_salary())
+
+            # print(self.split_address()[0])
+            # print(self.split_address()[1])
+            # print(self.split_address()[2])
+            # print(self.split_address()[3])
 
     def split_address(self) -> list:
         """
@@ -84,15 +87,15 @@ class JobMedleyScraper:
         holiday_text = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("休日") + div p')
         
         # 2. 「年間休日」の文字列があるか確認
-        if '年間休日' and '年休' not in holiday_text:
-            return ''  # 「年間休日」がない場合は空白を返す
+        if '年間休日' or '年休' in holiday_text:
         
-        # 3. 「年間休日」に続く1〜3桁の数字を抽出する正規表現パターン
-        holiday_pattern = r'(年間休日|年休)\s*(\d{1,3})'
-        holiday_match = re.search(holiday_pattern, holiday_text)
+            # 3. 「年間休日」に続く1〜3桁の数字を抽出する正規表現パターン
+            holiday_pattern = r'(年間休日|年休).*?(\d{1,3})'
+            holiday_match = re.search(holiday_pattern, holiday_text)
         
-        # 4. 数字が見つかった場合はその数字を文字列として返す
-        return holiday_match.group(2) if holiday_match else ''
+            # 4. 数字が見つかった場合はその数字を文字列として返す
+            return holiday_match.group(2) if holiday_match else ''
+        else: return ''
 
     def get_trial_period(self) -> list:
         """
@@ -206,13 +209,43 @@ class JobMedleyScraper:
         # 情報が存在する場合は「あり」、存在しない場合は空白を返す
         return 'あり' if bonus_text else ''
 
+    def get_basic_salary(self) -> str:
+        """
+        CSSセレクタ '.font-semibold.text-jm-sm.break-keep + div p' から情報を取得し、
+        「基本給」に関する給与情報を抽出して整形します。
+
+        :return: 基本給情報（例: '150,000円' または '150,000円〜199,000円'）
+        """
+        # 1. 指定したセレクタのテキストを取得
+        info_text = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("給与の備考") + div p')
+    
+        # 2. 基本給のパターンを検索
+        # basic_salary_pattern1 = r'基本給.*?(\d{1,3}(?:,\d{3})*円(?:〜\d{1,3}(?:,\d{3})*円)?)'
+        basic_salary_pattern = r'基本給.*?(\d{1,3}(?:,\d{3})*|\d+)円(?:[〜\-](\d{1,3}(?:,\d{3})*|\d+)円)?'
+
+        # 3. パターン1を試し、見つからなければパターン2を試す
+        salary_match = re.search(basic_salary_pattern, info_text)
+
+        if salary_match:
+            # 4. 基本給情報を取得
+            salary_info = salary_match.group(1)
+        
+            # 5. そのままの情報を返す
+            return salary_info
+    
+        # 「基本給」に関する情報が見つからなければ空文字列を返す
+        return ''
+
     @staticmethod
     def convert_f_h(text: str) -> str:
         # 将全角字符转换为半角字符
         return unicodedata.normalize('NFKC', text)
 
 # 使用示例
-url = f"https://job-medley.com/hh/506688/" 
+url = f"https://job-medley.com/hh/1132927/"#https://job-medley.com/hh/1000614/ 
+#https://job-medley.com/hh/1143681/
+#https://job-medley.com/hh/1132927/
+
 scraper = JobMedleyScraper(url)
 scraper.start()
 

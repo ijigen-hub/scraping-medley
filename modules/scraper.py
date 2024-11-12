@@ -173,7 +173,7 @@ class JobMedleyScraper:
             print("is_all: " + str(is_all))
             url = f"https://job-medley.com/{job_type_code}/pref{prefecture_code}/?page={i}"
 
-            self.page.goto(url)
+            self.page.goto(url, wait_until="networkidle", timeout=60000)
 
             links = self.page.query_selector_all('a:has-text("求人を見る")')
 
@@ -202,6 +202,7 @@ class JobMedleyScraper:
 
         
     def scrape_job_details(self, job_url: str) -> Dict[str, str]:
+        self.page.route("**/*", lambda route: route.abort() if route.request.resource_type in ["image", "stylesheet", "font"] else route.continue_())
         self.page.goto(job_url)
         # ハローワーク求人のより正確なチェック
 
@@ -213,8 +214,8 @@ class JobMedleyScraper:
         
         # サイトからデータを各変数として取得
         data = {
-    "管理id": f"{job_url}",
-    "取得元テーブル名": f"{job_url}",
+    "管理id": "",
+    "取得元テーブル名": "",
     "取得元求人url": f"{job_url}",
     "登録日時": "",
     "アクション": "",
@@ -295,7 +296,7 @@ class JobMedleyScraper:
     '町丁目番地': self.split_address()[2], 
     "ビル_建物名": self.split_address()[3],
     "リモートワーク制度": "",
-    '沿線・最寄駅': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("アクセス") + div div p.whitespace-pre-wrap'), 
+    '沿線_最寄駅': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("アクセス") + div div p.whitespace-pre-wrap'), 
     "転勤": "",
     '従業員数': self.get_staff_total(), 
     '加入保険等': '健康保険,厚生年金,雇用保険,労災保険', 
@@ -328,41 +329,41 @@ class JobMedleyScraper:
     "非公開の選考条件": "",
     "急募": "",
     #以下は、該当項目はアピールポイントにあるか否かで判断する。アピールポイントはタグの集まりのため。
-    "オープニング": "0",
+    "オープニング": "",
     "未経験歓迎": "1" if '未経験可' in self.get_appeal_points() else'0',
     '学歴不問': "1" if '学歴不問' in self.get_appeal_points() else'0',
     "駅から5分以内": "1" if '駅から(5分以内)' in self.get_appeal_points() else'0',
-    "髪型_髪色自由": "0",
+    "髪型_髪色自由": "",
     "土日祝休み": "1" if '土日祝休み' in self.get_appeal_points() else'0',
-    "残業なし": "0",
-    "社員登用あり": "0",
+    "残業なし": "",
+    "社員登用あり": "",
     "交通費支給": "1" if '交通費支給' in self.get_appeal_points() else'0',
-    "リモート_在宅ok": "0",
+    "リモート_在宅ok": "",
     "車通勤ok": "1" if '車通勤可' in self.get_appeal_points() else '0',
-    "バイク通勤ok": "0",
+    "バイク通勤ok": "",
     "寮_社宅あり": "1" if '寮あり・社宅あり' in self.get_appeal_points() else '0',
     "即日勤務ok": "1" if '即日勤務OK' in self.get_appeal_points() else '0',
-    "シニア応援": "0",
+    "シニア応援": "",
     "無資格ok": "1" if '無資格可' in self.get_appeal_points() else '0',
-    "扶養内勤務ok": "0",
+    "扶養内勤務ok": "",
     "主婦_主夫歓迎": "1" if '主夫・主婦OK' in self.get_appeal_points() else '0',
     "副業_wワークok": "1" if '副業OK' in self.get_appeal_points() else '0',
     "留学生歓迎": "1" if '外国人材・留学生活躍中' in self.get_appeal_points() else '0',
     "ブランクok": "1" if 'ブランク可' in self.get_appeal_points() else '0',
-    "服装自由": "0",
-    "履歴書不要": "0",
-    "資格優遇": "0",
-    "昇給_昇格あり": "0",
+    "服装自由": "",
+    "履歴書不要": "",
+    "資格優遇": "",
+    "昇給_昇格あり": "",
     '賞与あり': "1" if 'ボーナス・賞与あり' in self.get_appeal_points() else '0', 
     '資格取得支援制度': "1" if '資格取得支援' in self.get_appeal_points() else '0',
     '正社員': "1" if self.get_job_forms() == "正社員" else "0",
     "週休2日": "1" if '週2日からOK' in self.get_appeal_points() else '0',
-    "シフト自由_選べる": "0",
+    "シフト自由_選べる": "",
     "週1日からok": "1" if '週1日からOK' in self.get_appeal_points() else '0',
-    "週2_3日からok": "0",
-    "高収入_高時給": "0",
+    "週2_3日からok": "",
+    "高収入_高時給": "",
     "web面談可": "1" if 'WEB面接可' in self.get_appeal_points() else '0',
-    "管理タグ": "0"
+    "管理タグ": ""
 }
 
         return data
@@ -376,7 +377,7 @@ class JobMedleyScraper:
         if is_all:
             file_exists = os.path.isfile(filename)
             try:
-                with open(filename, 'a', newline='', encoding='utf-8') as csvfile:
+                with open(filename, 'a', newline='', encoding='utf-8-sig') as csvfile:
                     writer = csv.DictWriter(csvfile, fieldnames=self.CSV_COLUMNS)
                     if not file_exists:
                         writer.writeheader()
@@ -539,27 +540,23 @@ class JobMedleyScraper:
 
         :return: 基本給情報（例: '150,000円' または '150,000円〜199,000円'）
         """
-        # 1. 指定したセレクタのテキストを取得
+        #指定したセレクタのテキストを取得
         info_text = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("給与の備考") + div p')
-        
-        # 2. 基本給のパターンを検索
-        basic_salary_pattern = r'基本給.*?(\d{1,3}(?:,\d{3})*円(?:〜\d{1,3}(?:,\d{3})*円)?)'
+    
+        #基本給のパターンを検索
+        basic_salary_pattern = r'基本給.*?(\d{1,3}(?:,\d{3})*|\d+)円(?:[〜\-](\d{1,3}(?:,\d{3})*|\d+)円)?'
         salary_match = re.search(basic_salary_pattern, info_text)
-        
-        # 3. 「基本給」に関する情報が見つからなければ空文字列を返す
-        if not salary_match:
-            return ''
-        
-        # 4. 基本給情報を取得
-        salary_info = salary_match.group(1)
-        
-        # 5. 「〜」が含まれていない場合は単一の基本給金額、含まれている場合は範囲
-        if '〜' in salary_info:
-            # 範囲が指定されている場合はそのまま返す（例: '150,000円〜199,000円'）
+
+        if salary_match:
+            #基本給情報を取得
+            salary_info = salary_match.group(1)
+            if ',' in salary_info:
+                salary_info = salary_info.replace(',', '').strip()
+            #そのままの情報を返す
             return salary_info
-        else:
-            # 単一の金額のみの場合、その金額を返す（例: '150,000円'）
-            return salary_info
+    
+        # 「基本給」に関する情報が見つからなければ空文字列を返す
+        return ''
 
     def get_trial_period(self) -> list:
         """
@@ -615,15 +612,15 @@ class JobMedleyScraper:
         holiday_text = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("休日") + div p')
         
         # 2. 「年間休日」の文字列があるか確認
-        if '年間休日' and '年休' not in holiday_text:
-            return ''  # 「年間休日」がない場合は空白を返す
+        if '年間休日' or '年休' or '年間休暇' or '年間公休'in holiday_text:
         
-        # 3. 「年間休日」に続く1〜3桁の数字を抽出する正規表現パターン
-        holiday_pattern = r'(年間休日|年休)\s*(\d{1,3})'
-        holiday_match = re.search(holiday_pattern, holiday_text)
+            # 3. 「年間休日」に続く1〜3桁の数字を抽出する正規表現パターン
+            holiday_pattern = r'(年間休日|年休|年間休暇|年間公休).*?(\d{1,3})'# 対応パターン：“年間休日 120日”、“年休：100日”、“年間休日は 110日”
+            holiday_match = re.search(holiday_pattern, holiday_text)
         
-        # 4. 数字が見つかった場合はその数字を文字列として返す
-        return holiday_match.group(2) if holiday_match else ''
+            # 4. 数字が見つかった場合はその数字を文字列として返す
+            return holiday_match.group(2) if holiday_match else ''
+        else: return ''
 
     def split_address(self) -> list:
         """
