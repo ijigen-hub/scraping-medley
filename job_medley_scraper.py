@@ -129,8 +129,9 @@ def main():
 
 
         for job_type in job_type_data:
-            for prefecture in prefecture_data:
-            
+            print(f"{job_types_connection[job_type]}のスクレイピングを開始します")
+
+            for prefecture in prefecture_data:    
                 #2重循環で、職種・都道府県を全部回す
                 url = f"https://job-medley.com/{job_type}/pref{prefecture}/" 
             
@@ -145,7 +146,7 @@ def main():
 
                 total_pages = math.ceil(job_count / 30)
 
-                print(f"{prefecture}の求人数: {job_count}")
+                print(f"{prefecture_connection[prefecture]}の求人数: {job_count}")
                 print(f"総ページ数: {total_pages}")
 
                 try:
