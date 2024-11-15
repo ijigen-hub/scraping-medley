@@ -12,7 +12,55 @@ class JobMedleyScraper:
     def __init__(self, page):
         self.page = page
         self.data_list = []  # データリストの初期化を追加
-
+    #職種ーアプファベット対応関係
+    job_types_connection = {
+    "hh": "介護職・ヘルパー",
+    "la": "生活相談員",
+    "cm": "ケアマネジャー",
+    "mg": "管理職（介護）",
+    "km": "サービス提供責任者",
+    "ls": "生活支援員",
+    "apl": "福祉用具専門相談員・児童指導員/指導員",
+    "nm": "児童発達支援管理責任者",
+    "dcm": "サービス管理責任者",
+    "ans": "看護師・准看護師",
+    "nrd": "管理栄養士・栄養士",
+    "ck": "調理師・調理スタッフ",
+    "ctd": "介護タクシー・ドライバー",
+    "mc": "医療事務・受付",
+    "etc": "営業・管理部門・その他",
+    "cc": "介護事務",
+    "dm": "相談支援専門員",
+    "pt": "理学療法士",
+    "st": "言語聴覚士",
+    "ot": "作業療法士",
+    "ort": "視能訓練士",
+    "jdr": "柔道整復師",
+    "mas": "あん摩マッサージ指圧師",
+    "acu": "鍼灸師",
+    "bwt": "整体師",
+    "dds": "歯科医師",
+    "dh": "歯科衛生士",
+    "dt": "歯科技工士",
+    "da": "歯科助手",
+    "cw": "保育士",
+    "kt": "幼稚園教諭",
+    "acw": "保育補助",
+    "asc": "放課後児童支援員・学童指導員",
+    "dr": "医師",
+    "apo": "薬剤師",
+    "mn": "助産師",
+    "phn": "保健師",
+    "na": "看護助手",
+    "rt": "診療放射線技師",
+    "mt": "臨床検査技師",
+    "ce": "臨床工学技士",
+    "cp": "公認心理師・臨床心理士",
+    "csw": "医療ソーシャルワーカー",
+    "otc": "登録販売者",
+    "crc": "治験コーディネーター",
+    "pc": "調剤事務"
+    }
     # 1. CSVの列名を定義
     CSV_COLUMNS = [
     "管理id",
@@ -171,15 +219,15 @@ class JobMedleyScraper:
         count = 0 #スクレイピングした求人のカウント
         for i in range(start_page, end_page + 1):
             print("is_all: " + str(is_all))
-            url = f"https://job-medley.com/{job_type_code}/pref{prefecture_code}/?page={i}"
+            if i == 1: url = f"https://job-medley.com/{job_type_code}/pref{prefecture_code}/"
+            else: url = f"https://job-medley.com/{job_type_code}/pref{prefecture_code}/?page={i}"
 
-            self.page.goto(url, wait_until="networkidle", timeout=60000)
+            self.page.goto(url, wait_until="domcontentloaded", timeout=60000)
 
             links = self.page.query_selector_all('a:has-text("求人を見る")')
-
             jobs = [link.get_attribute('href') for link in links]
             found = False
-            
+
             for job in jobs:
                 try:
                     data = self.scrape_job_details(job)
@@ -194,11 +242,11 @@ class JobMedleyScraper:
                     return
                 # # ヒットデータ：10件ごとにCSVに書き込む
                 if len(self.data_list) >= 10:
-                    self.write_to_csv(self.data_list, is_all)
+                    self.write_to_csv(self.data_list, job_type_code, is_all)
                     print(f"計{count}ページの情報が取れました。")
             # # ヒットデータ：残りのデータがあれば書き込む
             if self.data_list:
-                self.write_to_csv(self.data_list, is_all)
+                self.write_to_csv(self.data_list, job_type_code, is_all)
 
         
     def scrape_job_details(self, job_url: str) -> Dict[str, str]:
@@ -368,12 +416,14 @@ class JobMedleyScraper:
 
         return data
 
-    def write_to_csv(self, data_list: Dict[str, Any], is_all: bool) -> None:
+    def write_to_csv(self, data_list: Dict[str, Any], job_type_code: str, is_all: bool) -> None:
         output_dir = 'output'
         os.makedirs(output_dir, exist_ok=True)
         
-        filename = f'{output_dir}/job_medley全職種求人.csv'
-        
+        filename = f'{output_dir}/job_medley求人_' + f'{self.job_types_connection[job_type_code]}.csv'
+        # filename = f'{output_dir}/job_medley全職種求人.csv'
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+
         if is_all:
             file_exists = os.path.isfile(filename)
             try:
