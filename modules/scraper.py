@@ -468,7 +468,7 @@ class JobMedleyScraper:
         雇用形態を取得します。
 
 
-        :return: 【正職員】or【契約職員】or【パート・バイト】or【業務委託】
+        :return: 【正社員】or【契約社員】or【アルバイト・パート】or【業務委託】
         """ 
         kyuyo = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("給与") + div')
         forms = ['正職員', '契約職員', 'パート・バイト', '業務委託']
@@ -476,7 +476,10 @@ class JobMedleyScraper:
             
             if form in kyuyo:
                 if form == '正職員' : return '正社員'
+                elif form == '契約職員': return '契約社員'
+                elif form == 'パート・バイト': return 'アルバイト・パート'
                 else: return form
+
 
     def get_work_style(self) -> str:
         """
@@ -589,6 +592,7 @@ class JobMedleyScraper:
                 else: max_salary = None
 
                 return [min_salary, max_salary]
+        return [None, None]#追加
 
     def get_basic_salary(self) -> str:
         """
