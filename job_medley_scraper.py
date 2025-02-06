@@ -1,11 +1,5 @@
-import json
 import math
-from typing import List, Dict, Any
-from pprint import pprint
 from playwright.sync_api import sync_playwright
-import os
-import sys
-import argparse
 from modules.scraper import JobMedleyScraper
 
 
@@ -60,7 +54,7 @@ def main():
     "pc": "調剤事務"
 }
     #職種のコード
-    job_type_data = ["hh", "la", "cm", "mg", "km", "ls", "apl", "nm", "dcm", "ans", "nrd", "ck", "ctd", "mc", "etc", "cc", "dm", "pt", "st", "ot", "ort", "jdr", "mas", "acu", "bwt", "dds", "dh", "dt", "da", "cw", "kt", "acw", "asc", "dr", "apo", "mn", "phn", "na", "rt", "mt", "ce", "cp", "csw", "otc", "crc", "pc"]
+    job_type_data = ["dr", "apo"]
 
     #都道府県ー数字の対応
     prefecture_connection = {"13":"東京都",
@@ -124,7 +118,7 @@ def main():
         
         is_all = True
 
-        job_type_data = ["hh", "la", "cm", "mg", "km", "ls", "apl", "nm", "dcm", "ans", "nrd", "ck", "ctd", "mc", "etc", "cc", "dm", "pt", "st", "ot", "ort", "jdr", "mas", "acu", "bwt", "dds", "dh", "dt", "da", "cw", "kt", "acw", "asc", "dr", "apo", "mn", "phn", "na", "rt", "mt", "ce", "cp", "csw", "otc", "crc", "pc"]
+        job_type_data = ["dr", "apo"]
         prefecture_data = ["13", "14", "11", "12", "8", "9", "10", "27", "28", "26", "25", "29", "30", "23", "22", "21", "24", "1", "2", "3", "4", "5", "6", "7", "19", "20", "15", "16", "17", "18", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47"]
 
 
@@ -137,7 +131,7 @@ def main():
             
                 page.goto(url)
             
-                job_count_element = page.query_selector('.c-search-condition-title__corresponding:has-text("該当件数")+ strong')
+                job_count_element = page.query_selector('dl.flex.items-center.gap-1.text-jm-sm.font-bold > dd > span.text-jm-important')
                 if job_count_element:
                     job_count = int(job_count_element.inner_text())
                 else:

@@ -251,6 +251,11 @@ class JobMedleyScraper:
         
     def scrape_job_details(self, job_url: str) -> Dict[str, str]:
         self.page.route("**/*", lambda route: route.abort() if route.request.resource_type in ["image", "stylesheet", "font"] else route.continue_())
+        
+        # URLが相対パスの場合、絶対パスに変換
+        if not job_url.startswith('http'):
+            job_url = f'https://job-medley.com{job_url}'
+        
         self.page.goto(job_url)
         # ハローワーク求人のより正確なチェック
 
@@ -589,6 +594,7 @@ class JobMedleyScraper:
                 else: max_salary = None
 
                 return [min_salary, max_salary]
+        return [None, None]
 
     def get_basic_salary(self) -> str:
         """
@@ -858,4 +864,3 @@ class JobMedleyScraper:
         match = re.search(r'〜\s*(\d{1,3},\d{3})', input_str)
         return match.group(1) if match else ''
 
-    
