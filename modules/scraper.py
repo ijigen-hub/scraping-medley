@@ -749,23 +749,19 @@ class JobMedleyScraper:
         # 情報がなければ空文字を返す
         if not text:
             return ''
+        # カッコ内の内容を無視
+        text_no_brackets = re.sub(r'（[^）]*）', '', text)
 
         # すべての数字を抽出
-        all_numbers = re.findall(r'\d+', text)
-        # 括弧内の数字を抽出（全角括弧を考慮して調整）
-        numbers_in_brackets = re.findall(r'（\D*(\d+)\D*）', text)
+        all_numbers = re.findall(r'\d+', text_no_brackets)
 
         # すべての数字の合計
         total_sum = sum(int(num) for num in all_numbers)
-        if total_sum == 0: return ''#中に数字が入っていなければ、空白を戻す。（最後に0人というデータを戻すのを避けるため、）
-        # 括弧内の数字の合計
-        brackets_sum = sum(int(num) for num in numbers_in_brackets)
-
-        # 合計から括弧内の数字を引いた結果
-        final_count = total_sum - brackets_sum
+        if total_sum == 0:
+            return ''#中に数字が入っていなければ、空白を戻す。（最後に0人というデータを戻すのを避けるため、）
 
         # 結果を文字列として返す
-        return final_count
+        return total_sum
 
     def check_bonus(self) -> str:
         """
