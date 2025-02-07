@@ -568,30 +568,27 @@ class JobMedleyScraper:
         wage_classification = ["月給", "時給", "年収"]
         for classification in wage_classification:
             if classification in salary_text:
-                min_salary_pattern = r'{}(\d+,\d+)円'.format(classification)
-                max_salary_pattern = r'{}\d+,\d+円〜(\d+,\d+)円'.format(classification)
+                min_salary_pattern = r'{}\s*(\d[\d,]*)円'.format(classification)
+                max_salary_pattern = r'{}\s*\d[\d,]*円\s*[〜~]\s*(\d[\d,]*)円'.format(classification)
 
-                # 最低給与金額を検索
+
                 min_salary_match = re.search(min_salary_pattern, salary_text)
                 min_salary = min_salary_match.group(1) if min_salary_match else ''
-                #　’,’をなくす
                 if ',' in min_salary:
                     min_salary = min_salary.replace(',', '')
-                    min_salary = min_salary.strip()
+                if min_salary:
+                    min_salary = int(min_salary)
+                else:
+                    min_salary = None
 
-                if min_salary: min_salary = int(min_salary)
-                else: min_salary = None
-
-                # 最高給与金額を検索
                 max_salary_match = re.search(max_salary_pattern, salary_text)
                 max_salary = max_salary_match.group(1) if max_salary_match else ''
-                #　’,’をなくす
                 if ',' in max_salary:
                     max_salary = max_salary.replace(',', '')
-                    max_salary = max_salary.strip()
-                    
-                if max_salary: max_salary = int(max_salary)
-                else: max_salary = None
+                if max_salary:
+                    max_salary = int(max_salary)
+                else:
+                    max_salary = None
 
                 return [min_salary, max_salary]
         return [None, None]

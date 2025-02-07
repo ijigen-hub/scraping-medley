@@ -54,7 +54,7 @@ def main():
     "pc": "調剤事務"
 }
     #職種のコード
-    job_type_data = ["dr", "apo"]
+    job_type_data = ["dr"]
 
     #都道府県ー数字の対応
     prefecture_connection = {"13":"東京都",
