@@ -265,7 +265,7 @@ class JobMedleyScraper:
     "管理id": None,
     "取得元テーブル名": None,
     "取得元求人url": f"{job_url}",
-    "登録日時": None,
+    "登録日時": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
     "アクション": None,
     "公開_非公開": None,
     "公開予定日": None,
