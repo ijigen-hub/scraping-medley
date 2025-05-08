@@ -137,7 +137,7 @@ def main():
             
                 page.goto(url)
             
-                job_count_element = page.query_selector('.c-search-condition-title__corresponding:has-text("該当件数")+ strong')
+                job_count_element = page.query_selector('.text-jm-important')
                 if job_count_element:
                     job_count = int(job_count_element.inner_text())
                 else:

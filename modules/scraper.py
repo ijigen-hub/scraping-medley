@@ -251,7 +251,7 @@ class JobMedleyScraper:
         
     def scrape_job_details(self, job_url: str) -> Dict[str, str]:
         self.page.route("**/*", lambda route: route.abort() if route.request.resource_type in ["image", "stylesheet", "font"] else route.continue_())
-        self.page.goto(job_url)
+        self.page.goto(f"https://job-medley.com{job_url}")
         # ハローワーク求人のより正確なチェック
 
         hello_work_elements = self.page.query_selector_all('span.c-tag:has-text("ハローワーク求人"), p.c-heading:has-text("この求人はハローワーク求人です")')
@@ -259,13 +259,14 @@ class JobMedleyScraper:
             for element in hello_work_elements:
                 print(f"検出された要素: {element.inner_text()}")
             raise SystemExit(0)  # SystemExitを発生させる
+        nowtime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         
         # サイトからデータを各変数として取得
         data = {
     "管理id": None,
     "取得元テーブル名": None,
-    "取得元求人url": f"{job_url}",
-    "登録日時": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+    "取得元求人url": f"https://job-medley.com{job_url}",
+    "登録日時": nowtime,
     "アクション": None,
     "公開_非公開": None,
     "公開予定日": None,
@@ -276,27 +277,27 @@ class JobMedleyScraper:
     '求人サブタイトル': self.get_text('h2.font-semibold.text-jm-brown'),
     "応募受付電話番号": None,
     "電話応募":'可',
-    '職種': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("募集職種") + div div'),
+    '職種': self.get_text('.font-semibold.text-jm-sm:has-text("募集職種") + div div'),
     "職種_google_for_jobs用": None,
     "職種_求人box用": None,
     "職種_stanby用": None,
     "職種_検索用": None,
     "職種_indeed検索用": None,
-    '業務内容': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("仕事内容") + div p'),
+    '業務内容': self.get_text('.font-semibold.text-jm-sm:has-text("仕事内容") + div p'),
     "業務内容_画像1_url": None,
     "業務内容_画像1_説明文": None,
     "業務内容_画像2_url": None,
     "業務内容_画像2_説明文": None,
     "業務内容_画像3_url": None,
     "業務内容_画像3_説明文": None,
-    '応募資格': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("応募要件") + div p'),
+    '応募資格': self.get_text('.font-semibold.text-jm-sm:has-text("応募要件") + div p'),
     "応募資格_画像1_url": None,
     "応募資格_画像1_説明文": None,
     "応募資格_画像2_url": None,
     "応募資格_画像2_説明文": None,
     "応募資格_画像3_url": None,
     "応募資格_画像3_説明文": None,
-    '求める人物像': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("応募要件") + div p'),
+    '求める人物像': self.get_text('.font-semibold.text-jm-sm:has-text("応募要件") + div p'),
     "求める人物像_画像1_url": None,
     "求める人物像_画像1_説明文": None,
     "求める人物像_画像2_url": None,
@@ -309,15 +310,15 @@ class JobMedleyScraper:
     "採用担当": None,
     "応募フォーム": None,
     '年齢': self.get_age_info(), 
-    '就業時間': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("勤務時間") + div p'), 
-    '休憩時間': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("勤務時間") + div p'), 
+    '就業時間': self.get_text('.font-semibold.text-jm-sm:has-text("勤務時間") + div p'), 
+    '休憩時間': self.get_text('.font-semibold.text-jm-sm:has-text("勤務時間") + div p'), 
     "時間外": None,
-    '賃金': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("給与") + div p'), 
+    '賃金': self.get_text('.font-semibold.text-jm-sm:has-text("給与") + div p'), 
     '賃金区分': self.get_wage_classification(), 
     '最低給与金額': self.get_salary_range()[0], 
     '最大給与金額': self.get_salary_range()[1], 
     '基本給': self.get_basic_salary(),
-    '勤務時間': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("勤務時間") + div p'), 
+    '勤務時間': self.get_text('.font-semibold.text-jm-sm:has-text("勤務時間") + div p'), 
     '固定残業の有無': 'なし',
     "固定残業時間": None,
     "固定残業時間_法定内": None,
@@ -334,9 +335,9 @@ class JobMedleyScraper:
     "試用期間中の固定残業時間": None,
     "試用期間中の固定残業時間_法定内": None,
     "試用期間中の固定残業代": None,
-    '給与の補足': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("給与の備考") + div p'),
-    '待遇': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("待遇") + div p'), 
-    '休日': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("休日") + div p'), 
+    '給与の補足': self.get_text('.font-semibold.text-jm-sm:has-text("給与の備考") + div p'),
+    '待遇': self.get_text('.font-semibold.text-jm-sm:has-text("待遇") + div p'), 
+    '休日': self.get_text('.font-semibold.text-jm-sm:has-text("休日") + div p'), 
     '年間休日数': self.get_annual_holidays(),
     "育児休業取得実績": None,
     '都道府県': self.split_address()[0], 
@@ -344,7 +345,7 @@ class JobMedleyScraper:
     '町丁目番地': self.split_address()[2], 
     "ビル_建物名": self.split_address()[3],
     "リモートワーク制度": None,
-    '沿線_最寄駅': self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("アクセス") + div div p.whitespace-pre-wrap'), 
+    '沿線_最寄駅': self.get_text('.font-semibold.text-jm-sm:has-text("アクセス") + div div p.text-jm-xs'), 
     "転勤": None,
     '従業員数': self.get_staff_total(), 
     '加入保険等': '健康保険,厚生年金,雇用保険,労災保険', 
@@ -354,13 +355,13 @@ class JobMedleyScraper:
     "通勤手当": None,
     '採用人数': '1',
     "採用人数_indeed_api用": None,
-    "学歴": self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("応募要件") + div div div a:has-text("学歴")'), 
-    "選考方法": self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("選考プロセス") + div div p'),
+    "学歴": self.get_text('.font-semibold.text-jm-sm:has-text("応募要件") + div div div a:has-text("学歴")'), 
+    "選考方法": self.get_text('.font-semibold.text-jm-sm:has-text("選考プロセス") + div div p'),
     "選考結果通知": None,
     "応募書類等": None,
     "選考日時": None,
-    "勤務先会社名": self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("法人・施設名") + div a'), 
-    "勤務先会社本社所在地": self.convert_f_h(self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("アクセス") + div div p:nth-of-type(1)')), 
+    "勤務先会社名": self.get_text('.font-semibold.text-jm-sm:has-text("法人・施設名") + div a'), 
+    "勤務先会社本社所在地": self.convert_f_h(self.get_text('.font-semibold.text-jm-sm:has-text("アクセス") + div div p:nth-of-type(1)')), 
     "勤務先会社ウェブサイトurl": None,
     "勤務先事業内容": None,
     "受動喫煙防止措置": None,
@@ -470,7 +471,7 @@ class JobMedleyScraper:
 
         :return: 【正職員】or【契約職員】or【パート・バイト】or【業務委託】
         """ 
-        kyuyo = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("給与") + div')
+        kyuyo = self.get_text('.font-semibold.text-jm-sm:has-text("給与") + div')
         forms = ['正職員', '契約職員', 'パート・バイト', '業務委託']
         for form in forms:
             
@@ -485,8 +486,8 @@ class JobMedleyScraper:
 
         :return: シフト制or固定時間制
         """ 
-        work_hours = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("勤務時間") + div p')
-        holiday = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("休日") + div p')
+        work_hours = self.get_text('.font-semibold.text-jm-sm:has-text("勤務時間") + div p')
+        holiday = self.get_text('.font-semibold.text-jm-sm:has-text("休日") + div p')
         attributes = [work_hours, holiday]
 
         for attribute in attributes:
@@ -504,7 +505,7 @@ class JobMedleyScraper:
         :return: 年齢情報または空文字列
         """
         # 1. 応募要件を取得
-        requirements = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("応募要件") + div p')
+        requirements = self.get_text('.font-semibold.text-jm-sm:has-text("応募要件") + div p')
         
         # 2. 年齢のパターンを正規表現で検索（例: "～XX歳"or"XX歳以下" 形式）
         age_pattern1 = r'～\d+歳'
@@ -544,7 +545,7 @@ class JobMedleyScraper:
         """
         賃金区分
         """
-        salary_text = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("給与") + div')
+        salary_text = self.get_text('.font-semibold.text-jm-sm:has-text("給与") + div')
         wage_classification = ["月給", "時給", "年収"]
         for classification in wage_classification:
             if classification in salary_text: return classification
@@ -558,7 +559,7 @@ class JobMedleyScraper:
         :return: [最低給与金額, 最高給与金額]
         """
         # 給与を取得
-        salary_text = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("給与") + div div')
+        salary_text = self.get_text('h3.font-semibold.text-jm-sm:has-text("給与") + div div')
         
         wage_classification = ["月給", "時給", "年収"]
         for classification in wage_classification:
@@ -598,7 +599,7 @@ class JobMedleyScraper:
         :return: 基本給情報（例: '150,000円' または '150,000円〜199,000円'）
         """
         #指定したセレクタのテキストを取得
-        info_text = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("給与の備考") + div p')
+        info_text = self.get_text('.font-semibold.text-jm-sm:has-text("給与の備考") + div p')
     
         #基本給のパターンを検索
         basic_salary_pattern = r'基本給.*?(\d{1,3}(?:,\d{3})*|\d+)円(?:[〜\-](\d{1,3}(?:,\d{3})*|\d+)円)?'
@@ -622,7 +623,7 @@ class JobMedleyScraper:
         :return: [試用期間の有無 ('あり'または 'なし'), 試用期間の月数 (存在する場合の数値文字列)]
         """
         # 指定したセレクタから情報を取得
-        info_text = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("給与の備考") + div p')
+        info_text = self.get_text('.font-semibold.text-jm-sm:has-text("給与の備考") + div p')
         
         # 「試用期間」が含まれているかを確認
         if '試用期間' not in info_text:
@@ -666,7 +667,7 @@ class JobMedleyScraper:
         :return: 年間休日の日数（文字列）または空白文字列
         """
         # 1. 指定したセレクタからテキスト情報を取得
-        holiday_text = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("休日") + div p')
+        holiday_text = self.get_text('.font-semibold.text-jm-sm:has-text("休日") + div p')
         
         # 2. 「年間休日」の文字列があるか確認
         if '年間休日' or '年休' or '年間休暇' or '年間公休'in holiday_text:
@@ -686,7 +687,7 @@ class JobMedleyScraper:
         :return: [都道府県, 市区町村, 町丁目番号, 建物]
         """
         # 指定したセレクタからテキスト情報を取得
-        address_text = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("アクセス") + div div p:nth-of-type(1)')
+        address_text = self.get_text('.font-semibold.text-jm-sm:has-text("アクセス") + div div p:nth-of-type(1)')
         
         #リストを初期設定する
         result = ["", "", "", ""]
@@ -740,7 +741,7 @@ class JobMedleyScraper:
 
     def get_staff_total(self) -> str:
         # スタッフ構成の情報を取得
-        selector = '.font-semibold.text-jm-sm.break-keep:has-text("スタッフ構成") + div div'
+        selector = '.font-semibold.text-jm-sm:has-text("スタッフ構成") + div div'
         text = self.get_text(selector)
 
         # 情報がなければ空文字を返す
@@ -772,7 +773,7 @@ class JobMedleyScraper:
         :return: 「あり」または空白
         """
         # 指定のCSSセレクタを使用してリンクがあるかを確認
-        bonus_text = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("待遇") + div div div a:has-text("ボーナス・賞与あり")')
+        bonus_text = self.get_text('.font-semibold.text-jm-sm:has-text("待遇") + div div div a:has-text("ボーナス・賞与あり")')
     
         # 情報が存在する場合は「あり」、存在しない場合は空白を返す
         return 'あり' if bonus_text else ''
@@ -785,7 +786,7 @@ class JobMedleyScraper:
         :return: 「あり」または空白
         """
         # 指定のCSSセレクタを使用してリンクがあるかを確認
-        bonus_text = self.get_text('.font-semibold.text-jm-sm.break-keep:has-text("教育体制・研修") + div div div a:has-text("資格取得支援")')
+        bonus_text = self.get_text('.font-semibold.text-jm-sm:has-text("教育体制・研修") + div div div a:has-text("資格取得支援")')
     
         # 情報が存在する場合は「あり」、存在しない場合は空白を返す
         return 'あり' if bonus_text else ''
@@ -800,7 +801,6 @@ class JobMedleyScraper:
         :param input_str: 入力文字列
         :return: 抽出されたテキスト
         """
-        print("===input_str: " + input_str)
         if input_str is None:
             return ''
         match = re.search(r'【(.*?)】', input_str)
